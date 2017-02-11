@@ -270,13 +270,21 @@ class IRSystem:
         #       in self.docs because it is now a map from doc IDs to set
         #       of unique words in the original document.
         # Right now this just returns all possible documents!
-        docs = []
-        for d in range(len(self.titles)):
-            docs.append(d)
-
-        # ------------------------------------------------------------------
-
-        return sorted(docs)   # sorted doesn't actually matter
+        # [[],[2, 6, 8, 12, 30, 36, 40, 59],[35],[16],[3, 5, 10, 11, 19, 20, 28, 33, 41, 44, 47, 58]]
+        docs = set()
+        booleanDocs = self.boolean_retrieve(query)
+        for doc in booleanDocs:
+            arrangement = []
+            for i in range(len(query)):
+                arrangement.append(self.inv_index[query[i]][doc])
+            for pos in arrangement[0]:
+                for i in range(1, len(arrangement)):
+                    if pos+i in arrangement[i]:
+                        if i == len(arrangement) - 1:
+                            docs.add(doc)
+                    else:
+                        break
+        return sorted(list(docs))   # sorted doesn't actually matter
 
     def rank_retrieve(self, query):
         """
