@@ -301,13 +301,25 @@ class IRSystem:
 
         # Right now, this code simply gets the score by taking the Jaccard
         # similarity between the query and every document.
-        words_in_query = set()
-        for word in query:
-            words_in_query.add(word)
+        # [[56, 0.010676611271744123], [36, 0.020785969361989683], [35, 0.024442652693719064], [21, 0.020316146520653038], [21, 0.035182936915852864]]
 
-        for d, words_in_doc in self.docs.iteritems():
-            scores[d] = len(words_in_query.intersection(words_in_doc)) \
-                / float(len(words_in_query.union(words_in_doc)))
+        # (math.log((len(self.docs) + 0.0) / len(self.get_posting(word)))/math.log(10))
+
+        for word in query:
+            postingList = self.inv_index[word]
+            for doc in self.inv_index[word].keys():
+                scores[doc] += self.get_tfidf(word, doc)
+                # print word, doc, self.get_tfidf(word, doc), scores[doc]
+        index = 0
+        for i in range(len(self.docs)):
+            if self.docs[i] == 0:
+                print "\t {}".format(i)
+        length = [0.0 for xx in range(len(self.titles))]
+        for word in self.vocab:
+            for doc in range(len(scores)):
+                length[doc] += self.get_tfidf(word, doc)**2
+        for i in range(len(scores)):
+            scores[i] = scores[i]/math.sqrt(length[i])
 
         # ------------------------------------------------------------------
 
