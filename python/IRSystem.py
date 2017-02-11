@@ -145,7 +145,11 @@ class IRSystem:
             for d in range(len(self.docs)):
                 if word not in self.tfidf:
                     self.tfidf[word] = {}
-                self.tfidf[word][d] = 0.0
+                if len(self.inv_index[word][d]) == 0:
+                    # print "I AM ZERO"
+                    self.tfidf[word][d] = 0.0
+                else:
+                    self.tfidf[word][d] = (1.0 + math.log(len(self.inv_index[word][d]))/math.log(10))*(math.log((len(self.docs) + 0.0) / len(self.get_posting(word)))/math.log(10))
 
         # ------------------------------------------------------------------
 
@@ -153,8 +157,7 @@ class IRSystem:
         # ------------------------------------------------------------------
         # TODO: Return the tf-idf weigthing for the given word (string) and
         #       document index.
-        tfidf = 0.0
-        # ------------------------------------------------------------------
+        tfidf = self.tfidf[word][document]
         return tfidf
 
     def get_tfidf_unstemmed(self, word, document):
@@ -185,7 +188,7 @@ class IRSystem:
         inv_index = {}
         for word in self.vocab:
             inv_index[word] = {}
-            for i in range(len(self.titles)):
+            for i in range(len(self.docs)):
                 inv_index[word][i] = []
         iTitle = 0
         for doc in self.docs:
