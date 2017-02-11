@@ -133,12 +133,6 @@ class IRSystem:
 
     def compute_tfidf(self):
         # -------------------------------------------------------------------
-        # TODO: Compute and store TF-IDF values for words and documents.
-        #       Recall that you can make use of:
-        #         * self.vocab: a list of all distinct (stemmed) words
-        #       NOTE that you probably do *not* want to store a value for every
-        #       word-document pair, but rather just for those pairs where a
-        #       word actually occurs in the document.
         print "Calculating tf-idf..."
         self.tfidf = {}
         for word in self.vocab:
@@ -155,8 +149,6 @@ class IRSystem:
 
     def get_tfidf(self, word, document):
         # ------------------------------------------------------------------
-        # TODO: Return the tf-idf weigthing for the given word (string) and
-        #       document index.
         tfidf = self.tfidf[word][document]
         return tfidf
 
@@ -175,16 +167,6 @@ class IRSystem:
         """
         print "Indexing..."
         # ------------------------------------------------------------------
-        # TODO: Create an inverted, positional index.
-        #       Granted this may not be a linked list as in a proper
-        #       implementation.
-        #       This index should allow easy access to both
-        #       1) the documents in which a particular word is contained, and
-        #       2) for every document, the positions of that word in the document
-        #       Some helpful instance variables:
-        #         * self.docs = List of documents
-        #         * self.titles = List of titles
-
         inv_index = {}
         for word in self.vocab:
             inv_index[word] = {}
@@ -214,7 +196,6 @@ class IRSystem:
         which the word occurs.
         """
         # ------------------------------------------------------------------
-        # TODO: return the list of postings for a word.
         posting = list(self.inv_index[word].keys())
         postingRange = len(posting)
         tbDeleted = []
@@ -243,9 +224,6 @@ class IRSystem:
         Return an empty list if the query does not return any documents.
         """
         # ------------------------------------------------------------------
-        # TODO: Implement Boolean retrieval. You will want to use your
-        #       inverted index that you created in index().
-        # Right now this just returns all the possible documents!
         allDocs = []
         for word in query:
             allDocs.append(self.get_posting(word))
@@ -264,16 +242,6 @@ class IRSystem:
         Return an empty list if the query does not return any documents.
         """
         # ------------------------------------------------------------------
-        # TODO: Implement Phrase Query retrieval (ie. return the documents
-        #       that don't just contain the words, but contain them in the
-        #       correct order) You will want to use the inverted index
-        #       that you created in index(), and may also consider using
-        #       boolean_retrieve.
-        #       NOTE that you no longer have access to the original documents
-        #       in self.docs because it is now a map from doc IDs to set
-        #       of unique words in the original document.
-        # Right now this just returns all possible documents!
-        # [[],[2, 6, 8, 12, 30, 36, 40, 59],[35],[16],[3, 5, 10, 11, 19, 20, 28, 33, 41, 44, 47, 58]]
         docs = set()
         booleanDocs = self.boolean_retrieve(query)
         for doc in booleanDocs:
@@ -296,20 +264,11 @@ class IRSystem:
         """
         scores = [0.0 for xx in range(len(self.titles))]
         # ------------------------------------------------------------------
-        # TODO: Implement cosine similarity between a document and a list of
-        #       query words.
-
-        # Right now, this code simply gets the score by taking the Jaccard
-        # similarity between the query and every document.
-        # [[56, 0.010676611271744123], [36, 0.020785969361989683], [35, 0.024442652693719064], [21, 0.020316146520653038], [21, 0.035182936915852864]]
-
-        # (math.log((len(self.docs) + 0.0) / len(self.get_posting(word)))/math.log(10))
 
         for word in query:
             postingList = self.inv_index[word]
             for doc in self.inv_index[word].keys():
                 scores[doc] += self.get_tfidf(word, doc)
-                # print word, doc, self.get_tfidf(word, doc), scores[doc]
         index = 0
         for i in range(len(self.docs)):
             if self.docs[i] == 0:
