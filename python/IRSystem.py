@@ -19,14 +19,12 @@ class IRSystem:
         self.alphanum = re.compile('[^a-zA-Z0-9]')
         self.p = PorterStemmer()
 
-
     def get_uniq_words(self):
         uniq = set()
         for doc in self.docs:
             for word in doc:
                 uniq.add(word)
         return uniq
-
 
     def __read_raw_data(self, dirname):
         print "Stemming Documents..."
@@ -44,7 +42,7 @@ class IRSystem:
 
         for i, filename in enumerate(filenames):
             title = title_pattern.search(filename).group(1)
-            print "    Doc %d of %d: %s" % (i+1, len(filenames), title)
+            print "    Doc %d of %d: %s" % (i + 1, len(filenames), title)
             titles.append(title)
             contents = []
             f = open('%s/raw/%s' % (dirname, filename), 'r')
@@ -69,7 +67,6 @@ class IRSystem:
             of.close()
             docs.append(contents)
         return titles, docs
-
 
     def __read_stemmed_data(self, dirname):
         print "Already stemmed!"
@@ -102,7 +99,6 @@ class IRSystem:
 
         return titles, docs
 
-
     def read_data(self, dirname):
         """
         Given the location of the 'data' directory, reads in the documents to
@@ -123,7 +119,7 @@ class IRSystem:
         # Sort document alphabetically by title to ensure we have the proper
         # document indices when referring to them.
         ordering = [idx for idx, title in sorted(enumerate(titles),
-            key = lambda xx : xx[1])]
+                                                 key=lambda xx: xx[1])]
 
         self.titles = []
         self.docs = []
@@ -134,7 +130,6 @@ class IRSystem:
 
         # Get the vocabulary.
         self.vocab = [xx for xx in self.get_uniq_words()]
-
 
     def compute_tfidf(self):
         # -------------------------------------------------------------------
@@ -154,7 +149,6 @@ class IRSystem:
 
         # ------------------------------------------------------------------
 
-
     def get_tfidf(self, word, document):
         # ------------------------------------------------------------------
         # TODO: Return the tf-idf weigthing for the given word (string) and
@@ -162,7 +156,6 @@ class IRSystem:
         tfidf = 0.0
         # ------------------------------------------------------------------
         return tfidf
-
 
     def get_tfidf_unstemmed(self, word, document):
         """
@@ -173,7 +166,6 @@ class IRSystem:
         word = self.p.stem(word)
         return self.get_tfidf(word, document)
 
-
     def index(self):
         """
         Build an index of the documents.
@@ -183,17 +175,25 @@ class IRSystem:
         # TODO: Create an inverted, positional index.
         #       Granted this may not be a linked list as in a proper
         #       implementation.
-        #       This index should allow easy access to both 
-        #       1) the documents in which a particular word is contained, and 
-        #       2) for every document, the positions of that word in the document 
+        #       This index should allow easy access to both
+        #       1) the documents in which a particular word is contained, and
+        #       2) for every document, the positions of that word in the document
         #       Some helpful instance variables:
         #         * self.docs = List of documents
         #         * self.titles = List of titles
 
         inv_index = {}
         for word in self.vocab:
-            inv_index[word] = []
-
+            inv_index[word] = {}
+            for title in self.titles:
+                inv_index[word][title] = []
+        iTitle = 0
+        for doc in self.docs:
+            index = 0
+            for word in doc:
+                inv_index[word][self.titles[iTitle]].append(index)
+                index += 1
+            iTitle += 1
         self.inv_index = inv_index
 
         # ------------------------------------------------------------------
@@ -204,7 +204,6 @@ class IRSystem:
             bag_of_words = set(doc)
             id_to_bag_of_words[d] = bag_of_words
         self.docs = id_to_bag_of_words
-
 
     def get_posting(self, word):
         """
@@ -218,7 +217,6 @@ class IRSystem:
         return posting
         # ------------------------------------------------------------------
 
-
     def get_posting_unstemmed(self, word):
         """
         Given a word, this *stems* the word and then calls get_posting on the
@@ -227,7 +225,6 @@ class IRSystem:
         """
         word = self.p.stem(word)
         return self.get_posting(word)
-
 
     def boolean_retrieve(self, query):
         """
@@ -248,20 +245,19 @@ class IRSystem:
 
         return sorted(docs)   # sorted doesn't actually matter
 
-
     def phrase_retrieve(self, query):
         """
-        Given a query in the form of an ordered list of *stemmed* words, this 
-        returns the list of documents in which *all* of those words occur, and 
-        in the specified order. 
-        Return an empty list if the query does not return any documents. 
+        Given a query in the form of an ordered list of *stemmed* words, this
+        returns the list of documents in which *all* of those words occur, and
+        in the specified order.
+        Return an empty list if the query does not return any documents.
         """
         # ------------------------------------------------------------------
-        # TODO: Implement Phrase Query retrieval (ie. return the documents 
-        #       that don't just contain the words, but contain them in the 
-        #       correct order) You will want to use the inverted index 
+        # TODO: Implement Phrase Query retrieval (ie. return the documents
+        #       that don't just contain the words, but contain them in the
+        #       correct order) You will want to use the inverted index
         #       that you created in index(), and may also consider using
-        #       boolean_retrieve. 
+        #       boolean_retrieve.
         #       NOTE that you no longer have access to the original documents
         #       in self.docs because it is now a map from doc IDs to set
         #       of unique words in the original document.
@@ -273,7 +269,6 @@ class IRSystem:
         # ------------------------------------------------------------------
 
         return sorted(docs)   # sorted doesn't actually matter
-
 
     def rank_retrieve(self, query):
         """
@@ -293,17 +288,16 @@ class IRSystem:
 
         for d, words_in_doc in self.docs.iteritems():
             scores[d] = len(words_in_query.intersection(words_in_doc)) \
-                    / float(len(words_in_query.union(words_in_doc)))
+                / float(len(words_in_query.union(words_in_doc)))
 
         # ------------------------------------------------------------------
 
         ranking = [idx for idx, sim in sorted(enumerate(scores),
-            key = lambda xx : xx[1], reverse = True)]
+                                              key=lambda xx: xx[1], reverse=True)]
         results = []
         for i in range(10):
             results.append((ranking[i], scores[ranking[i]]))
         return results
-
 
     def process_query(self, query_str):
         """
@@ -320,7 +314,6 @@ class IRSystem:
         query = [self.p.stem(xx) for xx in query]
         return query
 
-
     def query_retrieve(self, query_str):
         """
         Given a string, process and then return the list of matching documents
@@ -336,7 +329,6 @@ class IRSystem:
         """
         query = self.process_query(query_str)
         return self.phrase_retrieve(query)
-
 
     def query_rank(self, query_str):
         """
@@ -384,7 +376,7 @@ def run_tests(irsys):
                 if set(guess) == set(soln[i]):
                     num_correct += 1
 
-        elif part == 2: # phrase query test
+        elif part == 2:  # phrase query test
             print "Phrase Query Retrieval"
             queries = prob.split(", ")
             for i, query in enumerate(queries):
@@ -418,7 +410,7 @@ def run_tests(irsys):
                         num_correct += 1
 
         feedback = "%d/%d Correct. Accuracy: %f" % \
-                (num_correct, num_total, float(num_correct)/num_total)
+            (num_correct, num_total, float(num_correct) / num_total)
         if num_correct == num_total:
             points = 3
         elif num_correct > 0.75 * num_total:
