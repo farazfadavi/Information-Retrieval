@@ -185,13 +185,13 @@ class IRSystem:
         inv_index = {}
         for word in self.vocab:
             inv_index[word] = {}
-            for title in self.titles:
-                inv_index[word][title] = []
+            for i in range(len(self.titles)):
+                inv_index[word][i] = []
         iTitle = 0
         for doc in self.docs:
             index = 0
             for word in doc:
-                inv_index[word][self.titles[iTitle]].append(index)
+                inv_index[word][iTitle].append(index)
                 index += 1
             iTitle += 1
         self.inv_index = inv_index
@@ -212,8 +212,14 @@ class IRSystem:
         """
         # ------------------------------------------------------------------
         # TODO: return the list of postings for a word.
-        posting = []
-
+        posting = list(self.inv_index[word].keys())
+        postingRange = len(posting)
+        tbDeleted = []
+        for i in range(postingRange):
+            if self.inv_index[word][i] == []:
+                tbDeleted.append(i)
+        for i in tbDeleted[::-1]:
+            del posting[i]
         return posting
         # ------------------------------------------------------------------
 
@@ -237,12 +243,14 @@ class IRSystem:
         # TODO: Implement Boolean retrieval. You will want to use your
         #       inverted index that you created in index().
         # Right now this just returns all the possible documents!
-        docs = []
-        for d in range(len(self.titles)):
-            docs.append(d)
+        allDocs = []
+        for word in query:
+            allDocs.append(self.get_posting(word))
+        docs = allDocs[0]
+        for i in range(1, len(allDocs)):
+            docs = [val for val in docs if val in allDocs[i]]
 
         # ------------------------------------------------------------------
-
         return sorted(docs)   # sorted doesn't actually matter
 
     def phrase_retrieve(self, query):
